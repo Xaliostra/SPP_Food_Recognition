@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Recognition</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
+        #result { margin-top: 20px; }
+        img { max-width: 300px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Upload an Image to Detect Food</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="uploadImage()">Analyze</button>
+    <div id="result"></div>
+    <script>
+        async function uploadImage() {
+            const input = document.getElementById('imageInput');
+            if (!input.files.length) {
+                alert("Please select an image");
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append("file", input.files[0]);
+            
+            document.getElementById("result").innerHTML = "Processing...";
+            
+            try {
+                const response = await fetch("/analyze", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById("result").innerHTML = `
+                        <h3>Detected Ingredients:</h3>
+                        <p>${data.ingredients.join(", ")}</p>
+                        <h3>Generated Recipe:</h3>
+                        <p>${data.recipe}</p>
+                        <img src="${URL.createObjectURL(input.files[0])}" alt="Uploaded Image">
+                    `;
+                } else {
+                    document.getElementById("result").innerHTML = `<p style='color:red;'>${data.error}</p>`;
+                }
+            } catch (error) {
+                document.getElementById("result").innerHTML = `<p style='color:red;'>Error processing request</p>`;
+            }
+        }
+    </script>
+</body>
+</html>
